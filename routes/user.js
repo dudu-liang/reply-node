@@ -35,6 +35,10 @@ router.post('/login',function(req,res) {
 
     let password = req.body.password;
 
+    console.log(1111);
+
+    console.log(req.cookie);
+
     try{
 
         if(!name || name == "") {
@@ -58,6 +62,11 @@ router.post('/login',function(req,res) {
                         message : '登录失败，请重试'
                     });
                 }else{
+                    let hash = hashPW(name, password);
+                    res.cookie("account", {account: name, hash: hash}, {
+                        maxAge: 86400000,
+                        path : '/'
+                    });
                     res.send({
                         status : 200,
                         message : '登录成功'
@@ -95,9 +104,6 @@ router.post('/register',function(req,res) {
 
     try {
 
-        console.log(9);
-        console.log(req.body.name);
-
         user.find({
             name : name
         },function(err,docs) {
@@ -110,8 +116,11 @@ router.post('/register',function(req,res) {
                 if(docs.length == 0) {
                     //注册用户
                     registerUser(query,function(data) {
-                            var hash = hashPW(name, password);
-                            res.cookie("account", {account: name, hash: hash}, {maxAge: 86400000});
+                            let hash = hashPW(name, password);
+                            res.cookie("account", {account: name, hash: hash}, {
+                                maxAge: 86400000,
+                                path : '/'
+                            });
                             res.send({
                                 status : 200,
                                 message : '注册成功'
@@ -120,7 +129,7 @@ router.post('/register',function(req,res) {
                 }else{
                     res.send({
                         status : 500,
-                        message : '用户已存在'
+                        message : '用户名已存在'
                     });
                 }
             }
