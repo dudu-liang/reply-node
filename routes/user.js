@@ -48,10 +48,22 @@ router.post('/login',function(req,res) {
                 message : '密码字段不能为空'
             });
         }else{
-            res.send({
-                status : 200,
-                message : '登录成功'
-            });
+            user.findOne({
+                name : name,
+                password : password
+            },function(err,docs) {
+                if(err) {
+                    res.send({
+                        status : 201,
+                        message : '登录失败，请重试'
+                    });
+                }else{
+                    res.send({
+                        status : 200,
+                        message : '登录成功'
+                    });
+                }
+            })
         }
 
     }catch(err) {
