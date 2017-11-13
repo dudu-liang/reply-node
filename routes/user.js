@@ -1,5 +1,6 @@
 import express from 'express';
 import user from '../mongodb/user';
+import ask from '../mongodb/ask';
 import crypto from 'crypto';
 
 const router = express.Router();
@@ -62,7 +63,25 @@ let userFind = function(id,username,res,callback) {
         }
     })
 
+}
+
+let userMessage = async function(userId,callback) {
+
+    let unreqNumer = await ask.count({
+            reply_id : userId,
+            status : 1
+        });
     
+    let askNumber = await ask.count({
+            ask_id : userId
+        });
+
+    let answerNumber = await ask.count({
+        reply_id : userId,
+        status : 2
+    });
+
+    if(callback) callback(unreqNumer,askNumber,answerNumber);
 
 }
   
@@ -317,7 +336,61 @@ router.post('/update',function(req,res) {
             message : '系统出错'
         });
     }
-})
+});
+
+//获取个人主页信息
+router.get('/message',function(req,res) {
+    
+        try {
+    
+            let userId = req.query.id;
+    
+            if(!userId) {
+                throw new "缺少用户id参数";
+            }
+    
+            user.findOne({
+                "_id" : userId
+            },function(err,docs) {
+    
+                if(err) {
+    
+                    res.send({
+                      status : 201,
+                      message : '查询用户失败'
+                    });
+    
+                }else{
+
+                    userMessage(userId,function(unreqNumer,askNumber,answerNumber) {
+
+                        let copy = {
+                            unreqNumer,
+                            askNumber,
+                            answerNumber
+                        }
+                        let result = Object.assign({},docs._doc,copy);
+
+                        console.log(result);
+
+                        res.send({
+                            status : 200,
+                            message : '获取用户成功',
+                            data : result
+                        });
+                    });
+    
+                    
+                }
+            })
+            
+        } catch (error) {
+            res.send({
+                status : 500,
+                message : '系统出错'
+            })
+        }
+    });
 
 
 export default router;

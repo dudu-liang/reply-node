@@ -1,21 +1,25 @@
 import express from 'express';
 import ask from '../mongodb/ask';
+import user from '../mongodb/user';
 
 const router = express.Router();
 
 var findUserName = function (userId,callback) {
 
-    ask.findById(userId,function(err,data) {
+    return new Promise((resolve, reject) => {
 
-        if(err) {
-            throw new '查询用户名失败';
-        }else{
-            console.log(9099);
-            console.log(data);
-            if(callback) callback(data);
-        }
+        user.findById(userId,function(err,data) {
+            
+            if(err) {
+                throw new '查询用户名失败';
+            }else{
+                resolve(data.username);
+            }
+            
+        })
+    });
 
-    })
+    
 }
 
 
@@ -54,8 +58,6 @@ router.post('/save', (req,res) => {
     let askId = req.body.askId;
     let content = req.body.content;
 
-    console.log(req.body);
-
     try {
 
         if(!replyId) {
@@ -82,5 +84,202 @@ router.post('/save', (req,res) => {
     }
 
 });
+
+//待回答问题列表
+
+router.get('/waitList',function(req,res) {
+
+    let userId = req.query.id;
+
+        try {
+
+            ask.find({
+                reply_id : userId,
+                status : 1
+            },function(err,docs) {
+
+                if(err) {
+                    res.send({
+                        status : 201,
+                        message : '获取待回答列表失败'
+                    });
+                }else{
+                    res.send({
+                        status : 200,
+                        message : '获取列表成功',
+                        data : docs
+                    })
+                }
+                
+            });
+
+        } catch (error) {
+
+            res.send({
+                status : 500,
+                message : '系统出错'
+            });
+            
+        }
+})
+
+//我的提问列表
+
+router.get('/askList',function(req,res) {
+    
+        let userId = req.query.id;
+    
+            try {
+    
+                ask.find({
+                    ask_id : userId
+                },function(err,docs) {
+    
+                    if(err) {
+                        res.send({
+                            status : 201,
+                            message : '获取待回答列表失败'
+                        });
+                    }else{
+                        res.send({
+                            status : 200,
+                            message : '获取列表成功',
+                            data : docs
+                        })
+                    }
+                    
+                });
+    
+            } catch (error) {
+    
+                res.send({
+                    status : 500,
+                    message : '系统出错'
+                });
+                
+            }
+    });
+
+//我的回答列表
+
+router.get('/answerList',function(req,res) {
+    
+        let userId = req.query.id;
+    
+            try {
+    
+                ask.find({
+                    reply_id : userId,
+                    status : 2
+                },function(err,docs) {
+    
+                    if(err) {
+                        res.send({
+                            status : 201,
+                            message : '获取待回答列表失败'
+                        });
+                    }else{
+                        res.send({
+                            status : 200,
+                            message : '获取列表成功',
+                            data : docs
+                        })
+                    }
+                    
+                });
+    
+            } catch (error) {
+    
+                res.send({
+                    status : 500,
+                    message : '系统出错'
+                });
+                
+            }
+    });
+
+//回答问题
+
+    router.post('/answer',function(req,res) {
+
+        let id = req.body.id;
+
+        let answer = req.body.answer;
+
+        try {
+
+            if(!id) {
+                throw new '缺少id参数';
+            };
+
+            if(!answer) {
+                throw new '缺少answer参数';
+            }
+
+            ask.update({_id:id},{$set:{answer:answer,status : 2}},function(err){
+                
+                if(err) {
+                    res.send({
+                        status : 201,
+                        message : '回答失败'
+                    });
+                }else{
+                    res.send({
+                        status : 200,
+                        message : '回答成功'
+                    });
+                }
+            });
+            
+        } catch (error) {
+            res.send({
+                status : 500,
+                message : '系统出错'
+            });
+        }
+    });
+
+//获取单个问题
+router.get('/query',function(req,res) {
+
+    let id = req.query.id;
+
+    if(!id) {
+        throw new '缺少id参数';
+    }
+
+    try {
+        
+        ask.findById(id,function(err,docs) {
+            
+            if(err) {
+    
+                res.send({
+                    status : 201,
+                    message : '获取问题详情失败'
+                });
+    
+            }else{
+    
+                res.send({
+                    status : 200,
+                    message : '获取问题详情成功',
+                    data : docs
+                });
+    
+            }
+            
+        });
+
+    } catch (error) {
+
+        res.send({
+            status : 500,
+            message : '系统出错'
+        })
+        
+    }
+})
+
 
 module.exports = router;

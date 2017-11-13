@@ -12,7 +12,8 @@ let askSchema = new Schema({
         type : Number,
         default : 1
     }, //1:待回答，2:已回答
-    rep_content : String
+    rep_content : String,
+    answer : String
 });
 
 let ask = mongoose.model('ask',askSchema);
