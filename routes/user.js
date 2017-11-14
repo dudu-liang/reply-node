@@ -394,12 +394,6 @@ router.post('/upload',function(req,res) {
          let time = new Date().getTime();
          let target_path = './public/upload/' + time + req.files.avatar.name;
 
-
-         console.log('路径地址');
-
-         console.log(tmp_path);
-         console.log(target_path);
-
             // 移动文件
             fs.rename(tmp_path, target_path, function(err) {
 
