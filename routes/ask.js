@@ -13,7 +13,11 @@ var findUserName = function (userId,callback) {
             if(err) {
                 throw new '查询用户名失败';
             }else{
-                resolve(data.username);
+                let info = {
+                    username : data.username,
+                    avatar : data.avatar
+                }
+                resolve(info);
             }
             
         })
@@ -25,13 +29,15 @@ var findUserName = function (userId,callback) {
 
 let saveAsk = async (replyId,askId,content,res) => {
 
-    let replyUsername = await findUserName(replyId);
-    let askUsername = await findUserName(askId);
+    let replyData = await findUserName(replyId);
+    let askData = await findUserName(askId);
     let data = {
         reply_id : replyId,
         ask_id : askId,
-        reply_username : replyUsername,
-        ask_username : askUsername,
+        reply_username : replyData.username,
+        ask_username : askData.username,
+        reply_avatar : replyData.avatar,
+        ask_avatar : askData.avatar,
         content : content
     }
 
@@ -279,7 +285,42 @@ router.get('/query',function(req,res) {
         })
         
     }
-})
+});
+
+//首页问题列表
+
+router.get('/homeAnswerList',function(req,res) {
+    
+            try {
+    
+                ask.find({
+                    status : 2
+                },function(err,docs) {
+    
+                    if(err) {
+                        res.send({
+                            status : 201,
+                            message : '获取待问题列表失败'
+                        });
+                    }else{
+                        res.send({
+                            status : 200,
+                            message : '获取列表成功',
+                            data : docs
+                        })
+                    }
+                    
+                });
+    
+            } catch (error) {
+    
+                res.send({
+                    status : 500,
+                    message : '系统出错'
+                });
+                
+            }
+    });
 
 
 module.exports = router;

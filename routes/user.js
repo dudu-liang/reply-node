@@ -2,6 +2,7 @@ import express from 'express';
 import user from '../mongodb/user';
 import ask from '../mongodb/ask';
 import crypto from 'crypto';
+import fs from 'fs';
 
 const router = express.Router();
 
@@ -38,8 +39,6 @@ let userFind = function(id,username,res,callback) {
             user.find({    
                 "$and" :  [ {'username' : {$ne:oldname}} , {'username':username} ] 
             },function(uerror,udocs) {
-
-                console.log(udocs);
 
                 if(uerror) {
         
@@ -93,10 +92,6 @@ router.post('/login',function(req,res) {
     let name = req.body.name;
 
     let password = req.body.password;
-
-    console.log(1111);
-
-    console.log(req.cookie);
 
     try{
 
@@ -292,6 +287,7 @@ router.post('/update',function(req,res) {
         let username = req.body.username;
         let description = req.body.description;
         let userId = req.body.id;
+        let avatar = req.body.avatar;
 
             if(!username) {
 
@@ -310,7 +306,8 @@ router.post('/update',function(req,res) {
                  
                 user.findByIdAndUpdate(userId,{
                     username : username,
-                    description : description
+                    description : description,
+                    avatar : avatar
                 },function(err,docs) {
                     if(err) {
                         res.send({
@@ -371,8 +368,6 @@ router.get('/message',function(req,res) {
                         }
                         let result = Object.assign({},docs._doc,copy);
 
-                        console.log(result);
-
                         res.send({
                             status : 200,
                             message : '获取用户成功',
@@ -391,6 +386,39 @@ router.get('/message',function(req,res) {
             })
         }
     });
+
+//用户头像
+router.post('/upload',function(req,res) {
+    
+         let tmp_path = req.files.avatar.path;
+         let time = new Date().getTime();
+         let target_path = './public/upload/' + time + req.files.avatar.name;
+
+            // 移动文件
+            fs.rename(tmp_path, target_path, function(err) {
+
+                if (err) {
+
+                    res.send({
+                        status : 201,
+                        message : '头像上传出错'
+                    });
+
+                }else{
+                    // 删除临时文件夹文件, 
+                    fs.unlink(tmp_path, function() {
+                        if (err) throw err;
+                        res.send({
+                            status : 200,
+                            message : '文件上传到: ' + target_path + ' - ' + req.files.avatar.size + ' bytes',
+                            data : target_path.substr(1).replace('/public','')
+                        });
+                    });
+                }
+            
+            });
+    
+    })
 
 
 export default router;
